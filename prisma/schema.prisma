@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Task {
+  id             String         @id @default(cuid())
+  title          String
+  description    String?
+  dueDate        DateTime?
+  estimateMin    Int?
+  importance     Int            @default(3) // 1-5
+  isDone         Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  priorityScores PriorityScore[]
+}
+
+model DailyHealth {
+  id        String   @id @default(cuid())
+  date      DateTime @unique         // 1日1回の記録（0時固定で保存）
+  condition Int
+  note      String?
+  createdAt DateTime @default(now())
+}
+
+model MoodLog {
+  id        String   @id @default(cuid())
+  at        DateTime                  // 起動のたびに記録
+  mood      Int
+  note      String?
+  createdAt DateTime @default(now())
+}
+
+model PriorityScore {
+  id        String   @id @default(cuid())
+  date      DateTime
+  taskId    String
+  score     Float
+  reason    String?
+  createdAt DateTime @default(now())
+
+  task      Task     @relation(fields: [taskId], references: [id])
+
+  @@index([date])
+  @@index([taskId, date])
+}
