@@ -8,21 +8,21 @@ datasource db {
 }
 
 model Task {
-  id             String         @id @default(cuid())
+  id             String          @id @default(cuid())
   title          String
   description    String?
   dueDate        DateTime?
   estimateMin    Int?
-  importance     Int            @default(3) // 1-5
-  isDone         Boolean        @default(false)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  importance     Int             @default(3) // 1-5
+  isDone         Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
   priorityScores PriorityScore[]
 }
 
 model DailyHealth {
   id        String   @id @default(cuid())
-  date      DateTime @unique         // 1日1回の記録（0時固定で保存）
+  date      DateTime @unique // 1日1回の記録（0時固定で保存）
   condition Int
   note      String?
   createdAt DateTime @default(now())
@@ -30,7 +30,7 @@ model DailyHealth {
 
 model MoodLog {
   id        String   @id @default(cuid())
-  at        DateTime                  // 起動のたびに記録
+  at        DateTime // 起動のたびに記録
   mood      Int
   note      String?
   createdAt DateTime @default(now())
@@ -44,7 +44,7 @@ model PriorityScore {
   reason    String?
   createdAt DateTime @default(now())
 
-  task      Task     @relation(fields: [taskId], references: [id])
+  task Task @relation(fields: [taskId], references: [id])
 
   @@index([date])
   @@index([taskId, date])
