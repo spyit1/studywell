@@ -7,6 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+/**
+ * タスク本体。
+ * 重要度は 1〜5 想定。未完了のみを並べ替えてトップ3などで使用。
+ */
 model Task {
   id             String          @id @default(cuid())
   title          String
@@ -17,25 +21,48 @@ model Task {
   isDone         Boolean         @default(false)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
+
   priorityScores PriorityScore[]
+
+  @@index([isDone, importance, dueDate])
+  @@index([createdAt])
 }
 
+/**
+ * 体調（日に1回）。
+ * date は JST の 00:00 固定で保存する想定（フロントで正規化）。
+ * 1ユーザー想定のため日付でユニーク制約。
+ */
 model DailyHealth {
   id        String   @id @default(cuid())
-  date      DateTime @unique // 1日1回の記録（0時固定で保存）
-  condition Int
+  date      DateTime @unique
+  condition Int                   // 例: 良い=3, 普通=2, 悪い=1（フロントでマッピング）
   note      String?
   createdAt DateTime @default(now())
+
+  @@index([date])
+  @@index([createdAt])
 }
 
+/**
+ * 気分（アプリ起動のたび）。
+ * at は記録時刻。デフォルト now() を付与して API 側の負担を軽減。
+ */
 model MoodLog {
   id        String   @id @default(cuid())
-  at        DateTime // 起動のたびに記録
-  mood      Int
+  at        DateTime @default(now())
+  mood      Int                   // 例: 😄=5, 🙂=4, 😐=3, 😕=2, 😞=1（フロントでマッピング）
   note      String?
   createdAt DateTime @default(now())
+
+  @@index([at])
+  @@index([createdAt])
 }
 
+/**
+ * タスクごとの優先度スコア（当日や状況に応じて計算）。
+ * ダッシュボードの「今日のおすすめ」を作るための補助。
+ */
 model PriorityScore {
   id        String   @id @default(cuid())
   date      DateTime
