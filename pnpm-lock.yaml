@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@prisma/client':
-        specifier: ^6.16.3
+        specifier: 6.16.3
         version: 6.16.3(prisma@6.16.3(typescript@5.9.2))(typescript@5.9.2)
       next:
         specifier: 15.5.3
@@ -43,7 +43,7 @@ importers:
         specifier: 15.5.3
         version: 15.5.3(eslint@9.35.0(jiti@2.5.1))(typescript@5.9.2)
       prisma:
-        specifier: ^6.16.3
+        specifier: 6.16.3
         version: 6.16.3(typescript@5.9.2)
       tailwindcss:
         specifier: ^4
