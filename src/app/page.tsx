@@ -1,6 +1,9 @@
 // app/page.tsx
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+// 👇 追加：ポップアップ（クライアントコンポーネント）
+import HealthPrompt from "@/components/HealthPrompts";
+import MoodPrompt from "@/components/MoodPrompt";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -25,6 +28,10 @@ export default async function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 text-gray-900">
+      {/* ===== ポップアップ（ページ最上位でOK） ===== */}
+      <HealthPrompt />
+      <MoodPrompt />
+
       {/* ヘッダー */}
       <header className="p-4 bg-white shadow flex justify-between items-center">
         <h1 className="text-2xl font-bold">StudyWell Dashboard</h1>
