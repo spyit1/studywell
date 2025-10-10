@@ -5,9 +5,12 @@ import Modal from "./Modal";
 
 const LOCAL_KEY = "healthPromptLastShown";
 
+type Condition = "良い" | "普通" | "悪い" | "";
+
 export default function HealthPrompt() {
   const [open, setOpen] = useState(false);
-  const [condition, setCondition] = useState<"良い" | "普通" | "悪い" | "">("");
+  const [condition, setCondition] = useState<Condition>("");
+  const [note, setNote] = useState("");
 
   // 今日すでに表示したか確認（1日1回）
   useEffect(() => {
@@ -21,12 +24,16 @@ export default function HealthPrompt() {
   }, []);
 
   const handleSubmit = async () => {
-    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD (JST日付として渡す)
     try {
       const res = await fetch("/api/health", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ condition, dayJst: today }),
+        body: JSON.stringify({
+          condition,            // "良い" | "普通" | "悪い"
+          note: note.trim() || undefined,
+          dayJst: today,        // その日のJSTキーでupsert
+        }),
       });
       if (!res.ok) console.error("Health save failed", await res.json());
     } catch (e) {
@@ -36,6 +43,8 @@ export default function HealthPrompt() {
       localStorage.setItem(LOCAL_KEY, new Date().toLocaleDateString("ja-JP"));
     } catch {}
     setOpen(false);
+    setCondition("");
+    setNote("");
   };
 
   return (
@@ -44,7 +53,7 @@ export default function HealthPrompt() {
         {["良い", "普通", "悪い"].map((c) => (
           <button
             key={c}
-            onClick={() => setCondition(c as any)}
+            onClick={() => setCondition(c as Condition)}
             className={`rounded-xl border px-3 py-2 ${
               condition === c ? "border-gray-900" : "border-gray-200"
             }`}
@@ -53,7 +62,19 @@ export default function HealthPrompt() {
           </button>
         ))}
       </div>
-      <div className="flex justify-end gap-2 pt-2">
+
+      {/* メモ入力（任意） */}
+      <div className="mt-3">
+        <textarea
+          className="w-full rounded-xl border px-3 py-2 text-sm"
+          placeholder="体調に関するメモ（任意）"
+          rows={2}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+        />
+      </div>
+
+      <div className="flex justify-end gap-2 pt-3">
         <button className="rounded-xl border px-3 py-2" onClick={() => setOpen(false)}>
           後で
         </button>

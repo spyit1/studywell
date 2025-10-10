@@ -5,9 +5,12 @@ import Modal from "./Modal";
 
 const SESSION_KEY = "moodPromptDismissedAt";
 
+type MoodEmoji = "😄" | "🙂" | "😐" | "😕" | "😞" | "";
+
 export default function MoodPrompt() {
   const [open, setOpen] = useState(false);
-  const [mood, setMood] = useState<"😄" | "🙂" | "😐" | "😕" | "😞" | "">("");
+  const [mood, setMood] = useState<MoodEmoji>("");
+  const [note, setNote] = useState("");
 
   useEffect(() => {
     try {
@@ -23,7 +26,10 @@ export default function MoodPrompt() {
       const res = await fetch("/api/mood", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mood }), // ← 絵文字のままでOK
+        body: JSON.stringify({
+          mood,                  // 絵文字のままでOK（API側で数値に正規化）
+          note: note.trim() || undefined,
+        }),
       });
       if (!res.ok) console.error("Mood save failed", await res.json());
     } catch (e) {
@@ -33,6 +39,8 @@ export default function MoodPrompt() {
       sessionStorage.setItem(SESSION_KEY, String(Date.now()));
     } catch {}
     setOpen(false);
+    setMood("");
+    setNote("");
   };
 
   return (
@@ -41,7 +49,7 @@ export default function MoodPrompt() {
         {["😄", "🙂", "😐", "😕", "😞"].map((m) => (
           <button
             key={m}
-            onClick={() => setMood(m as any)}
+            onClick={() => setMood(m as MoodEmoji)}
             className={`rounded-xl border px-3 py-2 ${
               mood === m ? "border-gray-900" : "border-gray-200"
             }`}
@@ -50,7 +58,19 @@ export default function MoodPrompt() {
           </button>
         ))}
       </div>
-      <div className="flex justify-end gap-2 pt-2">
+
+      {/* メモ入力（任意） */}
+      <div className="mt-3">
+        <textarea
+          className="w-full rounded-xl border px-3 py-2 text-sm"
+          placeholder="気分に関するメモ（任意）"
+          rows={2}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+        />
+      </div>
+
+      <div className="flex justify-end gap-2 pt-3">
         <button className="rounded-xl border px-3 py-2" onClick={() => setOpen(false)}>
           後で
         </button>

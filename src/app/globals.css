@@ -1,24 +1,30 @@
 @import "tailwindcss";
 
+/* classベースのdark:を有効化（Tailwind v4） */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* デフォルト（ライト） */
 :root {
   --background: #ffffff;
   --foreground: #171717;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
+/* ← OSのダーク設定に引っ張られる原因なので削除
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
 }
+*/
 
+/* .dark が付いたときだけ暗色へ */
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
+/* ベース */
 body {
   background: var(--background);
   color: var(--foreground);
