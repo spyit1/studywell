@@ -96,7 +96,7 @@ export default async function HistoryPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+    <main className="min-h-[100dvh] pb-[env(safe-area-inset-bottom) bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
       {/* ヘッダー */}
       <header className="sticky top-0 z-10 bg-white/80 dark:bg-gray-800/70 backdrop-blur border-b border-gray-200 dark:border-gray-700">
         <div className="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between">

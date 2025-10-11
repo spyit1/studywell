@@ -1,115 +1,98 @@
-
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// タスクIDの型定義
-type RouteContext = {
-    params: { taskId: string };
-};
-
-// ==========================================================
-// 1. タスク取得 (GET /api/tasks/[taskId])
-// ==========================================================
+// ---------- GET /api/tasks/:taskId ----------
 export async function GET(
-    request: Request, 
-    { params }: { params: { taskId: string } } 
+  _req: Request,
+  { params }: { params: Promise<{ taskId: string }> }   // ← Promiseで受ける
 ) {
-    const taskId = params.taskId;
+  const { taskId } = await params;                       // ← await が必須
 
-    try {
-        const task = await prisma.task.findUnique({
-            where: { id: taskId },
-        });
-
-        if (!task) {
-            // タスクが見つからない場合は 404 Not Found
-            return NextResponse.json({ error: "Task not found" }, { status: 404 });
-        }
-
-        return NextResponse.json(task, { status: 200 });
-    } catch (error) {
-        console.error("GET Task failed:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
-    }
+  try {
+    const task = await prisma.task.findUnique({ where: { id: taskId } });
+    if (!task) return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    return NextResponse.json(task);
+  } catch (error) {
+    console.error("GET Task failed:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
 }
 
-
-// ==========================================================
-// 2. タスク更新 (PUT /api/tasks/[taskId])
-// ==========================================================
+// ---------- PUT /api/tasks/:taskId ----------
 export async function PUT(
-    request: Request, 
-    { params }: { params: { taskId: string } }
+  request: Request,
+  { params }: { params: Promise<{ taskId: string }> }    // ← Promiseで受ける
 ) {
-    const taskId = params.taskId;
+  const { taskId } = await params;                       // ← await が必須
 
-    try {
-        const body = await request.json();
-        const {
-            title,
-            description,
-            dueDate,
-            estimateMin,
-            importance,
-            isDone, // 完了ステータスの更新も可能にする
-        } = body;
-        
-        // 簡易バリデーション (クライアント側でしっかりやるが、サーバー側でも確認)
-        if (!title || typeof title !== 'string' || title.trim() === '') {
-            return NextResponse.json({ error: "Title is required." }, { status: 400 });
-        }
-        
-        // データの整形
-        const parsedDueDate = dueDate ? new Date(dueDate) : null;
-        const parsedEstimateMin = estimateMin !== null && estimateMin !== '' ? parseInt(estimateMin, 10) : null;
-        const parsedImportance = importance ? parseInt(importance, 10) : 3;
+  try {
+    const body = await request.json().catch(() => ({} as any));
+    const {
+      title,
+      description,
+      dueDate,
+      estimateMin,
+      importance,
+      isDone,
+    } = body;
 
-        // DB更新
-        const updatedTask = await prisma.task.update({
-            where: { id: taskId },
-            data: {
-                title: title.trim(),
-                description: description,
-                dueDate: parsedDueDate,
-                estimateMin: parsedEstimateMin,
-                importance: parsedImportance,
-                isDone: isDone,
-            },
-        });
-
-        return NextResponse.json(updatedTask, { status: 200 });
-    } catch (error: any) {
-        console.error("PUT Task failed:", error);
-        // IDが見つからなかった場合の Prisma エラーコード P2025 をチェック
-        if (error.code === 'P2025') {
-            return NextResponse.json({ error: "Task not found" }, { status: 404 });
-        }
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    // 入力バリデーション（サーバ側も最低限）
+    if (typeof title !== "string" || title.trim() === "") {
+      return NextResponse.json({ error: "Title is required." }, { status: 400 });
     }
+    const parsedDueDate =
+      dueDate ? new Date(dueDate) : null;
+
+    const parsedEstimateMin =
+      estimateMin === null || estimateMin === undefined || estimateMin === ""
+        ? null
+        : Number.isFinite(Number(estimateMin))
+          ? Number(estimateMin)
+          : null;
+
+    const parsedImportance = Number(importance);
+    if (!Number.isFinite(parsedImportance) || parsedImportance < 1 || parsedImportance > 5) {
+      return NextResponse.json({ error: "Importance must be 1..5." }, { status: 400 });
+    }
+
+    const updatedTask = await prisma.task.update({
+      where: { id: taskId },
+      data: {
+        title: title.trim(),
+        description: typeof description === "string" ? description : null,
+        dueDate: parsedDueDate,
+        estimateMin: parsedEstimateMin,
+        importance: parsedImportance,
+        isDone: Boolean(isDone),
+      },
+    });
+
+    return NextResponse.json(updatedTask);
+  } catch (error: any) {
+    console.error("PUT Task failed:", error);
+    if (error?.code === "P2025") {
+      return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    }
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
 }
 
-
-// ==========================================================
-// 3. タスク削除 (DELETE /api/tasks/[taskId])
-// ==========================================================
+// ---------- DELETE /api/tasks/:taskId ----------
 export async function DELETE(
-    request: Request, 
-    { params }: { params: { taskId: string } }
+  _req: Request,
+  { params }: { params: Promise<{ taskId: string }> }    // ← Promiseで受ける
 ) {
-    const taskId = params.taskId;
-    
-    try {
-        await prisma.task.delete({
-            where: { id: taskId },
-        });
-        
-        // 削除成功時は 204 No Content を返すのが一般的
-        return new NextResponse(null, { status: 204 }); 
-    } catch (error: any) {
-        console.error("DELETE Task failed:", error);
-        if (error.code === 'P2025') {
-            return NextResponse.json({ error: "Task not found" }, { status: 404 });
-        }
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  const { taskId } = await params;                       // ← await が必須
+
+  try {
+    await prisma.task.delete({ where: { id: taskId } });
+    // 204はボディなしなので NextResponse.json は使わない
+    return new Response(null, { status: 204 });
+  } catch (error: any) {
+    console.error("DELETE Task failed:", error);
+    if (error?.code === "P2025") {
+      return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
 }
