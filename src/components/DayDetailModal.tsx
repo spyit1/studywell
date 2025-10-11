@@ -57,13 +57,16 @@ export default function DayDetailModal({
       onClick={onClose}
     >
       <div
-        className="w-[min(720px,92vw)] max-h-[85vh] overflow-auto rounded-2xl bg-white p-4 shadow-xl"
+        className="w-[min(720px,92vw)] max-h-[85vh] overflow-auto rounded-2xl bg-white p-4 shadow-xl
+                   text-gray-900
+                   dark:bg-gray-900 dark:text-gray-100"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between">
           <h3 className="text-xl font-semibold">{dateStr} の詳細</h3>
           <button
-            className="rounded-lg px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200"
+            className="rounded-lg px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200
+                       dark:bg-gray-800 dark:hover:bg-gray-700"
             onClick={onClose}
             aria-label="閉じる"
           >
@@ -73,13 +76,15 @@ export default function DayDetailModal({
 
         {/* 体調 */}
         <section className="mt-4">
-          <h4 className="text-sm font-semibold text-gray-600">体調</h4>
-          <div className="mt-1 rounded-xl border bg-gray-50 p-3">
+          <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-300">体調</h4>
+          <div className="mt-1 rounded-xl border bg-gray-50 p-3
+                          border-gray-200 text-gray-900
+                          dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100">
             <div className="text-sm">
               状態：<b>{conditionLabelFromInt(health?.condition)}</b>
             </div>
             {health?.note ? (
-              <div className="mt-1 text-sm text-gray-700 whitespace-pre-wrap">
+              <div className="mt-1 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                 メモ：{health.note}
               </div>
             ) : (
@@ -90,9 +95,11 @@ export default function DayDetailModal({
 
         {/* 気分ログ */}
         <section className="mt-4">
-          <h4 className="text-sm font-semibold text-gray-600">気分（その日）</h4>
+          <h4 className="text-sm font-semibold text-gray-600 dark:text-gray-300">気分（その日）</h4>
           {moodList.length === 0 ? (
-            <div className="mt-1 rounded-xl border bg-gray-50 p-3 text-sm text-gray-500">
+            <div className="mt-1 rounded-xl border bg-gray-50 p-3 text-sm
+                            text-gray-500 border-gray-200
+                            dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700">
               記録がありません
             </div>
           ) : (
@@ -100,24 +107,23 @@ export default function DayDetailModal({
               {moodList.map((m, idx) => (
                 <li
                   key={idx}
-                  className="rounded-xl border p-3 bg-white"
+                  className="rounded-xl border p-3 bg-white border-gray-200
+                             dark:bg-gray-800 dark:border-gray-700"
                 >
                   <div className="flex items-center justify-between">
                     <div className="text-base">
                       {moodEmojiFromInt(m.mood)}{" "}
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
                         （{fmtTimeJST(m.at)}）
                       </span>
                     </div>
                   </div>
                   {m.note ? (
-                    <div className="mt-1 text-sm text-gray-700 whitespace-pre-wrap">
+                    <div className="mt-1 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                       {m.note}
                     </div>
                   ) : (
-                    <div className="mt-1 text-xs text-gray-400">
-                      メモなし
-                    </div>
+                    <div className="mt-1 text-xs text-gray-400">メモなし</div>
                   )}
                 </li>
               ))}
