@@ -17,7 +17,7 @@ export default async function TasksPage() {
   });
 
   return (
-    <main className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+    <main className="min-h-[100dvh] pb-[env(safe-area-inset-bottom) bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
       <header className="p-4 bg-white dark:bg-gray-800 shadow-md border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
         <h1 className="text-3xl font-extrabold">全タスク一覧</h1>
 

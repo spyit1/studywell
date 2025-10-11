@@ -1,72 +1,84 @@
+// components/SettingsProvider.tsx
 "use client";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-import { useEffect, useState, ReactNode } from "react";
-
-const LS_KEY = "studywell.settings"; // { theme: "light"|"dark", highlightColor: "#RRGGBB" }
-
-type AppSettings = {
+type Settings = {
   theme: "light" | "dark";
   highlightColor: string;
+  snoozeDays: number; // ← 追加
 };
 
-const DEFAULTS: AppSettings = {
+type Ctx = {
+  settings: Settings;
+  update: (patch: Partial<Settings>) => void;
+};
+
+const DEFAULT: Settings = {
   theme: "light",
-  highlightColor: "#ef4444", // 既定の薄赤ベース
+  highlightColor: "#ef4444",
+  snoozeDays: 1, // ← 既定は 1日
 };
 
-// hex -> rgba(…, alpha)
-function hexToRGBA(hex: string, alpha = 0.16) {
-  const h = hex.replace("#", "");
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
+const SettingsContext = createContext<Ctx | null>(null);
 
-export function SettingsProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<AppSettings>(DEFAULTS);
+export function SettingsProvider({ children }: { children: React.ReactNode }) {
+  const [settings, setSettings] = useState<Settings>(DEFAULT);
 
-  // 初回：localStorage から復元
+  // 初期ロード
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(LS_KEY);
+      const raw = localStorage.getItem("studywell.settings");
       if (raw) {
-        const parsed = JSON.parse(raw) as Partial<AppSettings>;
-        setSettings({ ...DEFAULTS, ...parsed });
-      } else {
-        // 未設定なら light を保存しておく（FOUC対策の初期スクリプトと整合）
-        localStorage.setItem(LS_KEY, JSON.stringify(DEFAULTS));
+        const json = JSON.parse(raw);
+        setSettings((s) => ({
+          ...s,
+          ...json,
+          // バリデーション（1〜30日に制限する例）
+          snoozeDays: Math.min(30, Math.max(1, Number(json.snoozeDays ?? s.snoozeDays))),
+        }));
       }
-    } catch {
-      /* noop */
-    }
+    } catch {}
   }, []);
 
-  // DOM へ反映（テーマ & CSS変数）
-  useEffect(() => {
-    const root = document.documentElement;
-    if (settings.theme === "dark") root.classList.add("dark");
-    else root.classList.remove("dark");
+  // 保存
+  const update = (patch: Partial<Settings>) => {
+    setSettings((prev) => {
+      const next: Settings = {
+        ...prev,
+        ...patch,
+        snoozeDays: Math.min(30, Math.max(1, Number(patch.snoozeDays ?? prev.snoozeDays))),
+      };
+      localStorage.setItem("studywell.settings", JSON.stringify(next));
 
-    root.style.setProperty("--highlight-color", settings.highlightColor);
-    root.style.setProperty("--highlight-bg", hexToRGBA(settings.highlightColor, 0.16));
-  }, [settings]);
+      // テーマが変わったら即時反映＋Cookie同期（既存挙動を踏襲）
+      if (patch.theme) {
+        if (patch.theme === "dark") document.documentElement.classList.add("dark");
+        else document.documentElement.classList.remove("dark");
+        document.cookie = "studywell-theme=" + patch.theme + "; Path=/; Max-Age=31536000; SameSite=Lax";
+      }
+      // ハイライト色も即時反映
+      if (patch.highlightColor) {
+        document.documentElement.style.setProperty("--highlight-color", next.highlightColor);
+        document.documentElement.style.setProperty("--highlight-bg", `rgba(${
+          parseInt(next.highlightColor.slice(1,3),16)
+        },${
+          parseInt(next.highlightColor.slice(3,5),16)
+        },${
+          parseInt(next.highlightColor.slice(5,7),16)
+        },0.16)`);
+      }
+      return next;
+    });
+  };
 
-  // 他コンポから更新できるよう expose（安全に限定公開）
-  useEffect(() => {
-    (window as any).__studywellSetSettings = (next: Partial<AppSettings>) => {
-      setSettings((prev) => {
-        const merged = { ...prev, ...next };
-        try {
-          localStorage.setItem(LS_KEY, JSON.stringify(merged));
-        } catch {}
-        return merged;
-      });
-    };
-    return () => {
-      delete (window as any).__studywellSetSettings;
-    };
-  }, []);
+  const value = useMemo(() => ({ settings, update }), [settings]);
 
-  return <>{children}</>;
+  return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
+}
+
+// 使いやすいhook
+export function useSettings() {
+  const ctx = useContext(SettingsContext);
+  if (!ctx) throw new Error("useSettings must be used within SettingsProvider");
+  return ctx;
 }
