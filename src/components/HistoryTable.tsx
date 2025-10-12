@@ -88,7 +88,11 @@ export default function HistoryTable({ rows }: { rows: Row[] }) {
                   </td>
                   <td className="px-4 py-2">
                     <button
-                      className="rounded-lg border px-3 py-1 bg-white hover:bg-gray-50"
+                      className="
+                        rounded-lg border px-3 py-1 transition
+                        bg-white text-gray-800 hover:bg-gray-50
+                        dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600 dark:hover:bg-gray-700
+                      "
                       onClick={() => {
                         setSelected(r.dateStr);
                         setOpen(true);
