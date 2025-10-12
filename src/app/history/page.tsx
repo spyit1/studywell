@@ -27,7 +27,6 @@ export default async function HistoryPage() {
   const from30 = new Date(Date.now() - 30 * 24 * 3600 * 1000);
   const fromKey = jstDayToUtcMidnight(from30.toISOString().slice(0, 10));
 
-  // DB取得（note含む）。moodLog の並びキーが createdAt の場合は置き換え
   const [health, moods] = await Promise.all([
     prisma.dailyHealth.findMany({
       where: { date: { gte: fromKey } },
@@ -41,7 +40,6 @@ export default async function HistoryPage() {
     }),
   ]);
 
-  // JST日ごとにマージ
   type DayRow = {
     health?: { condition?: number | null; note?: string | null };
     moods: { at: Date; mood: number; note?: string | null }[];
@@ -61,7 +59,6 @@ export default async function HistoryPage() {
     byDay.set(key, cur);
   }
 
-  // 表示行（降順30日分）
   const rows = Array.from(byDay.entries())
     .sort((a, b) => (a[0] < b[0] ? 1 : -1))
     .slice(0, 30)
@@ -85,7 +82,6 @@ export default async function HistoryPage() {
       };
     });
 
-  // 直近7日サマリー（文字列比較OK：YYYY-MM-DD）
   const sevenCutoff = new Date(Date.now() - 7 * 24 * 3600 * 1000 + 9 * 3600 * 1000)
     .toISOString()
     .slice(0, 10);
@@ -100,13 +96,16 @@ export default async function HistoryPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 text-gray-900">
+    <main className="min-h-[100dvh] pb-[env(safe-area-inset-bottom) bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
       {/* ヘッダー */}
-      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b">
+      <header className="sticky top-0 z-10 bg-white/80 dark:bg-gray-800/70 backdrop-blur border-b border-gray-200 dark:border-gray-700">
         <div className="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between">
           <h1 className="text-2xl font-bold">履歴</h1>
           <div className="flex items-center gap-2">
-            <Link href="/" className="rounded-xl border px-4 py-2 bg-white hover:bg-gray-50">
+            <Link
+              href="/"
+              className="rounded-xl border px-4 py-2 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-700"
+            >
               Dashboard
             </Link>
           </div>
@@ -116,30 +115,30 @@ export default async function HistoryPage() {
       <div className="mx-auto max-w-5xl px-4 py-6 space-y-6">
         {/* サマリー */}
         <section className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl bg-white shadow p-4">
-            <div className="text-sm text-gray-500">直近7日の平均気分</div>
+          <div className="rounded-2xl bg-white dark:bg-gray-800 shadow p-4">
+            <div className="text-sm text-gray-500 dark:text-gray-400">直近7日の平均気分</div>
             <div className="mt-1 text-2xl font-bold">{avgMood7}</div>
-            <div className="mt-1 text-xs text-gray-500">（1〜5｜😞1 〜 😄5）</div>
+            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">（1〜5｜😞1 〜 😄5）</div>
           </div>
-          <div className="rounded-2xl bg-white shadow p-4">
-            <div className="text-sm text-gray-500">直近7日の体調内訳</div>
+          <div className="rounded-2xl bg-white dark:bg-gray-800 shadow p-4">
+            <div className="text-sm text-gray-500 dark:text-gray-400">直近7日の体調内訳</div>
             <div className="mt-1 text-sm">
               良い: <b>{healthCount7.good}</b> ／ 普通: <b>{healthCount7.normal}</b> ／ 悪い: <b>{healthCount7.bad}</b>
             </div>
-            <div className="mt-1 text-xs text-gray-500">（日次記録ベース）</div>
+            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">（日次記録ベース）</div>
           </div>
-          <div className="rounded-2xl bg-white shadow p-4">
-            <div className="text-sm text-gray-500">今日</div>
+          <div className="rounded-2xl bg-white dark:bg-gray-800 shadow p-4">
+            <div className="text-sm text-gray-500 dark:text-gray-400">今日</div>
             <div className="mt-1 text-lg">{today}</div>
-            <div className="mt-1 text-xs text-gray-500">JST基準</div>
+            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">JST基準</div>
           </div>
         </section>
 
-        {/* 一覧（Client Componentに委譲） */}
+        {/* 一覧 */}
         <section className="space-y-3">
           <h2 className="text-xl font-semibold">直近30日の記録</h2>
           {rows.length === 0 ? (
-            <div className="rounded-2xl border border-dashed bg-white p-8 text-center text-gray-500">
+            <div className="rounded-2xl border border-dashed bg-white dark:bg-gray-800 dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">
               記録がありません
             </div>
           ) : (

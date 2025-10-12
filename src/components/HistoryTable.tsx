@@ -51,9 +51,10 @@ export default function HistoryTable({ rows }: { rows: Row[] }) {
         }))}
       />
 
-      <div className="overflow-x-auto rounded-2xl border bg-white">
+      <div className="overflow-x-auto rounded-2xl border bg-white text-gray-900
+                      dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700">
         <table className="min-w-full text-sm">
-          <thead className="bg-gray-50 text-gray-600">
+          <thead className="bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
             <tr>
               <th className="px-4 py-2 text-left">日付</th>
               <th className="px-4 py-2 text-left">体調</th>
@@ -69,8 +70,8 @@ export default function HistoryTable({ rows }: { rows: Row[] }) {
               const hasMoodNote = r.moods.some((m) => m.note && m.note.trim());
               const noteBadge =
                 hasHealthNote || hasMoodNote
-                  ? "bg-amber-100 text-amber-800"
-                  : "bg-gray-100 text-gray-500";
+                  ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+                  : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-300";
 
               return (
                 <tr key={r.dateStr} className="border-t">
@@ -87,7 +88,11 @@ export default function HistoryTable({ rows }: { rows: Row[] }) {
                   </td>
                   <td className="px-4 py-2">
                     <button
-                      className="rounded-lg border px-3 py-1 bg-white hover:bg-gray-50"
+                      className="
+                        rounded-lg border px-3 py-1 transition
+                        bg-white text-gray-800 hover:bg-gray-50
+                        dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600 dark:hover:bg-gray-700
+                      "
                       onClick={() => {
                         setSelected(r.dateStr);
                         setOpen(true);
